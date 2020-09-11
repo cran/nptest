@@ -6,7 +6,7 @@ rand.test.cor <-
            perm.dist = TRUE){
     # Randomization Tests of Correlation Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: September 9, 2020
     
     
     #########   INITIAL CHECKS   #########

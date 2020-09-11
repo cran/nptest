@@ -172,9 +172,9 @@ The global null hypothesis (across all \eqn{m} variables) is tested by comparing
 The local null hypothesis (separately for each variable) is tested by comparing the \code{univariate} test statistic to \code{perm.dist}. This produces the adjusted p-values (\code{adj.p.values}), which control the familywise Type I error rate across the \eqn{m} tests.
 }
 
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
+\seealso{
+\code{\link{plot.np.loc.test}} S3 plotting method for visualizing the results
+}
 
 \examples{
 

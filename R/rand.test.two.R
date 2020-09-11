@@ -6,7 +6,7 @@ rand.test.two <-
            perm.dist = TRUE){
     # Two-Sample Randomization Test for Location (Mean/Median)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: September 9, 2020
     
     
     #########   INITIAL CHECKS   #########

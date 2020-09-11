@@ -6,7 +6,7 @@ rand.test.one <-
            perm.dist = TRUE){
     # One-Sample Randomization Tests for Location (Mean/Median)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: September 9, 2020
     
     
     #########   INITIAL CHECKS   #########

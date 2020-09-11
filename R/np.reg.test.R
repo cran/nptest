@@ -5,7 +5,7 @@ np.reg.test <-
            perm.dist = TRUE){
     # Nonparametric Tests of Regression Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: July 8, 2020
     
     
     ### check z
@@ -27,6 +27,15 @@ np.reg.test <-
                           beta = beta, homosced = homosced,
                           R = R, parallel = parallel, cl = cl,
                           perm.dist = perm.dist)
+      if(homosced && method %in% c("HJ", "KC", "SW")){
+        x <- as.matrix(x)
+        z <- as.matrix(z)
+        n <- nrow(x)
+        p <- ncol(x)
+        correct <- (n - p - ncol(z) - 1) / (n - p - 1)
+        pt$statistic <- pt$statistic * correct
+        if(perm.dist) pt$perm.dist <- pt$perm.dist * correct
+      }
     }
     
     ### return results

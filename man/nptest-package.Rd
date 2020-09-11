@@ -32,7 +32,9 @@ Fisher, R. A. (1925). Statistical methods for research workers. Edinburgh: Olive
 
 Freedman, D., & Lane, D. (1983). A nonstochastic interpretation of reported significance levels. Journal of Business and Economic Statistics, 1(4), 292-298. doi: 10.2307/1391660
 
-Helwig, N. E. (2019). Statistical nonparametric mapping: Multivariate permutation tests for location, correlation, and regression problems in neuroimaging. WIREs Computational Statistics, 11(2), e1457. doi: 10.1002/wics.1457
+Helwig, N. E. (2019a). Statistical nonparametric mapping: Multivariate permutation tests for location, correlation, and regression problems in neuroimaging. WIREs Computational Statistics, 11(2), e1457. doi: 10.1002/wics.1457
+
+Helwig, N. E. (2019b). Robust nonparametric tests of general linear model coefficients: A comparison of permutation methods and test statistics. NeuroImage, 201, 116030. doi: 10.1016/j.neuroimage.2019.116030
 
 Huh, M.-H., & Jhun, M. (2001). Random permutation testing in multiple linear regression. Communications in Statistics - Theory and Methods, 30(10), 2023-2032. doi: 10.1081/STA-100106060
 

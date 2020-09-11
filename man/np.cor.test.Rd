@@ -109,15 +109,15 @@ If \code{z} is supplied and \code{partial = TRUE}, the result will be the same a
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
+\seealso{
+\code{\link{plot.np.cor.test}} S3 plotting method for visualizing the results
+}
 
 \examples{
 # generate data
 rho <- 0.5
-val <- sqrt(1 - rho^2)
-corsqrt <- matrix(c(val, -1/2, val, 1/2), 2, 2)
+val <- c(sqrt(1 + rho), sqrt(1 - rho))
+corsqrt <- matrix(c(val[1], -val[2], val), 2, 2) / sqrt(2)
 set.seed(1)
 n <- 10
 z <- cbind(rnorm(n), rnorm(n)) \%*\% corsqrt

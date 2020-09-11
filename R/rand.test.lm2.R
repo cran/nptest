@@ -7,7 +7,7 @@ rand.test.lm2 <-
            perm.dist = TRUE){
     # Randomization Test for Regression (w/ covariates)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: September 9, 2020
     
     # Methods with Z:
     #--- permute X

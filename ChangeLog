@@ -1,0 +1,35 @@
+
+Changes from ver 1.0-0 to ver 1.0-1  (2020-09-10)
+
+1) Added S3 plotting method for all nptest functions
+	* Plots the permutation distribution and observed statistic
+	* The rejection region is a separate color (default is red)
+	* User input "alpha" controls rejection region (default is 0.05)
+
+2) Added new reference to package and np.reg.test()
+	* Only relevant for tests of regression coefficients
+	* See Helwig (2019b) for details on regression tests
+	* https://doi.org//10.1016/j.neuroimage.2019.116030
+
+3) Update to the statistic df in np.cor.test for semi/partial correlations
+	* Applicable when z is provided and independent = TRUE
+	* Previously used a denominator that ignored the dimension of z
+	* The correction does *not* affect the inferential results
+          (because the correction is applied to statistic and perm.dist)
+
+4) Update to the statistic df in np.reg.test with nuisance variables
+	* Applicable when z is provided, homosced = TRUE, and method %in% c("HJ", "KC", "SW")
+	* Previously used a denominator that ignored the dimension of z
+	* The correction does *not* affect the inferential results
+          (because the correction is applied to statistic and perm.dist)
+
+5) Correction to example in the help file for np.cor.test
+	* Previously used data generation code that only worked for rho = 0.5
+	* Updated data generation code works for all values of rho
+
+6) Update to package name (to clarify meaning of "Nonparametric Tests")
+	* Previous name: Nonparametric Tests
+	* Update name: Nonparametric Tests via Permutations
+
+
+

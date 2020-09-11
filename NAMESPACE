@@ -7,5 +7,10 @@ S3method(print, np.loc.test)
 S3method(print, np.cor.test)
 S3method(print, np.reg.test)
 
-importFrom("stats", "cor", "median", "sd", "qnorm")
+S3method(plot, np.loc.test)
+S3method(plot, np.cor.test)
+S3method(plot, np.reg.test)
+
+importFrom("graphics", "abline", "hist")
+importFrom("stats", "cor", "median", "sd", "qnorm", "quantile")
 importFrom("utils", "combn")

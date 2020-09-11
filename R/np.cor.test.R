@@ -6,7 +6,7 @@ np.cor.test <-
            perm.dist = TRUE){
     # Nonparametric Tests of Correlation Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: July 8, 2020
     
     
     ### check x and y
@@ -30,6 +30,13 @@ np.cor.test <-
                         rho = rho, independent = independent,
                         R = R, parallel = parallel, cl = cl,
                         perm.dist = perm.dist)
+    
+    ### correct se?
+    if(independent && !is.null(z)){
+      correct <- sqrt((n - ncol(z) - 1) / (n - 2))
+      pt$statistic <- pt$statistic * correct
+      if(perm.dist) pt$perm.dist <- pt$perm.dist * correct
+    }
     
     ### return results
     class(pt) <- "np.cor.test"

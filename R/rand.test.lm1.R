@@ -6,7 +6,7 @@ rand.test.lm1 <-
            perm.dist = TRUE){
     # Randomization Test for Regression (w/o covariates)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: September 9, 2020
     
     
     #########   INITIAL CHECKS   #########

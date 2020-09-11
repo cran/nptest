@@ -123,7 +123,9 @@ Draper, N. R., & Stoneman, D. M. (1966). Testing for the inclusion of variables 
 
 Freedman, D., & Lane, D. (1983). A nonstochastic interpretation of reported significance levels. Journal of Business and Economic Statistics, 1(4), 292-298. doi: 10.2307/1391660
 
-Helwig, N. E. (2019). Statistical nonparametric mapping: Multivariate permutation tests for location, correlation, and regression problems in neuroimaging. WIREs Computational Statistics, 11(2), e1457. doi: 10.1002/wics.1457
+Helwig, N. E. (2019a). Statistical nonparametric mapping: Multivariate permutation tests for location, correlation, and regression problems in neuroimaging. WIREs Computational Statistics, 11(2), e1457. doi: 10.1002/wics.1457
+
+Helwig, N. E. (2019b). Robust nonparametric tests of general linear model coefficients: A comparison of permutation methods and test statistics. NeuroImage, 201, 116030. doi: 10.1016/j.neuroimage.2019.116030
 
 Huh, M.-H., & Jhun, M. (2001). Random permutation testing in multiple linear regression. Communications in Statistics - Theory and Methods, 30(10), 2023-2032. doi: 10.1081/STA-100106060
 
@@ -165,9 +167,9 @@ The global null hypothesis (across all \eqn{m} variables) is tested by comparing
 The local null hypothesis (separately for each variable) is tested by comparing the \code{univariate} test statistic to \code{perm.dist}. This produces the adjusted p-values (\code{adj.p.values}), which control the familywise Type I error rate across the \eqn{m} tests.
 }
 
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
+\seealso{
+\code{\link{plot.np.reg.test}} S3 plotting method for visualizing the results
+}
 
 \examples{
 
