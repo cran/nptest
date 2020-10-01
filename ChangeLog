@@ -1,4 +1,17 @@
 
+Changes from ver 1.0-1 to ver 1.0-2  (2020-10-01)
+
+1) np.boot (new function for nonparametric bootstrapping)
+	* Provides bootstrap estimates of standard error and bias
+	* Computes five different bootstrap confidence intervals
+
+2) Update to package name (to reflect bootstrap extensions)
+	* Previous name: Nonparametric Tests via Permutations
+	* Updated name: Nonparametric Bootstrap and Permutation Tests
+
+
+
+
 Changes from ver 1.0-0 to ver 1.0-1  (2020-09-10)
 
 1) Added S3 plotting method for all nptest functions

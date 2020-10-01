@@ -1,6 +1,7 @@
 \name{nptest-internal}
 
 \alias{print.mcse}
+\alias{print.np.boot}
 \alias{print.np.cor.test}
 \alias{print.np.loc.test}
 \alias{print.np.reg.test}

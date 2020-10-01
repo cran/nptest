@@ -22,11 +22,17 @@ Maintainer: \packageMaintainer{nptest}
 \references{
 Blair, R. C., Higgins, J. J., Karniski, W., & Kromrey, J. D. (1994). A study of multivariate permutation tests which may replace Hotelling's T2 test in prescribed circumstances. Multivariate Behavioral Research, 29(2), 141-163. doi: 10.1207/s15327906mbr2902_2
 
+Carpenter, J., & Bithell, J. (2000). Bootstrap confidence intervals: when, which, what? A practical guide for medical statisticians. \emph{Statistics in Medicine, 19}(9), 1141-1164. doi: 10.1002/(SICI)1097-0258(20000515)19:9\%3C1141::AID-SIM479\%3E3.0.CO;2-F
+
 Chung, E., & Romano, J. P. (2016). Asymptotically valid and exact permutation tests based on two-sample U-statistics. Journal of Statistical Planning and Inference, 168, 97-105. doi: 10.1016/j.jspi.2015.07.004
+
+Davison, A. C., & Hinkley, D. V. (1997). \emph{Bootstrap Methods and Their Application}. Cambridge University Press. doi: 10.1017/CBO9780511802843
 
 DiCiccio, C. J., & Romano, J. P. (2017). Robust permutation tests for correlation and regression coefficients. Journal of the American Statistical Association, 112(519), 1211-1220. doi: 10.1080/01621459.2016.1202117
 
 Draper, N. R., & Stoneman, D. M. (1966). Testing for the inclusion of variables in linear regression by a randomisation technique. Technometrics, 8(4), 695-699. doi: 10.2307/1266641
+
+Efron, B., & Tibshirani, R. J. (1994). \emph{An Introduction to the Boostrap}. Chapman & Hall/CRC. doi: 10.1201/9780429246593
 
 Fisher, R. A. (1925). Statistical methods for research workers. Edinburgh: Oliver and Boyd.
 
@@ -79,6 +85,7 @@ Winkler, A. M., Ridgway, G. R., Webster, M. A., Smith, S. M., & Nichols, T. E. (
 # See examples for... 
 #   flipn        (generate all sign flip vectors)
 #   mcse         (Monte Carlo standard errors)
+#   np.boot      (nonparametric bootstrap resampling)
 #   np.cor.test  (nonparametric correlation tests)
 #   np.loc.test  (nonparametric location tests)
 #   np.reg.test  (nonparametric regression tests)
