@@ -1,5 +1,7 @@
 \name{nptest-internal}
 
+\alias{psdinv}
+
 \alias{print.mcse}
 \alias{print.np.boot}
 \alias{print.np.cor.test}

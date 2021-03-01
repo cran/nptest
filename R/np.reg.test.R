@@ -1,11 +1,11 @@
 np.reg.test <-
   function(x, y, z = NULL, method = NULL,
-           beta = NULL, homosced = FALSE,
+           beta = NULL, homosced = FALSE, lambda = 0,
            R = 9999, parallel = FALSE, cl = NULL,
            perm.dist = TRUE){
     # Nonparametric Tests of Regression Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: July 8, 2020
+    # last updated: February 17, 2021
     
     
     ### check z
@@ -19,15 +19,17 @@ np.reg.test <-
       pt <- rand.test.lm1(x = x, y = y,
                           method = method,
                           beta = beta, homosced = homosced,
-                          R = R, parallel = parallel, cl = cl,
+                          lambda = lambda, R = R, 
+                          parallel = parallel, cl = cl,
                           perm.dist = perm.dist)
     } else {
       pt <- rand.test.lm2(x = x, y = y, z = z,
                           method = method,
                           beta = beta, homosced = homosced,
-                          R = R, parallel = parallel, cl = cl,
+                          lambda = lambda, R = R, 
+                          parallel = parallel, cl = cl,
                           perm.dist = perm.dist)
-      if(homosced && method %in% c("HJ", "KC", "SW")){
+      if(homosced && method %in% c("KC", "SW") && R > 0){
         x <- as.matrix(x)
         z <- as.matrix(z)
         n <- nrow(x)

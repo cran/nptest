@@ -1,4 +1,17 @@
 
+Changes from ver 1.0-2 to ver 1.0-3  (2021-03-01)
+
+1) np.reg.test
+	* Added argument "lambda" for ridge regression estimators
+	* Improved (stabilized) inverse calculations in internals
+
+2) psdinv (new function)
+	* Inverse of positive semi-definite matrix
+	* Internal function used by np.reg.test
+
+
+
+
 Changes from ver 1.0-1 to ver 1.0-2  (2020-10-01)
 
 1) np.boot (new function for nonparametric bootstrapping)

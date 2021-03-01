@@ -2,18 +2,18 @@ rand.test.lm2 <-
   function(x, y, z, 
            method = c("HJ", "KC", "SW", "TB",
                       "FL", "MA", "OS", "DS"),
-           beta = NULL, homosced = FALSE,
+           beta = NULL, homosced = FALSE, lambda = 0,
            R = 9999, parallel = FALSE, cl = NULL,
            perm.dist = TRUE){
     # Randomization Test for Regression (w/ covariates)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: September 9, 2020
+    # last updated: February 18, 2021
     
     # Methods with Z:
-    #--- permute X
+    # ---  permute X
     # DS:  Y = P %*% X %*% beta + Z %*% gamma + e
     # OS:  Y = P %*% Rz %*% X %*% beta + Z %*% gamma + e
-    #--- permute Y
+    # ---  permute Y
     # MA:  P %*% Y = X %*% beta + Z %*% gamma + e
     # FL:  (P %*% Rz + Hz) %*% Y = X %*% beta + Z %*% gamma + e
     # TB:  (P %*% Rm + Hm) %*% Y = X %*% beta + Z %*% gamma + e
@@ -56,9 +56,26 @@ rand.test.lm2 <-
     ### check homosced
     homosced <- as.logical(homosced[1])
     
+    ### check lambda
+    nlambda <- length(lambda)
+    if(nlambda == 1L){
+      lambda <- rep(lambda, r)
+    } else if(nlambda != r){
+      warning("length(lambda) != ncol(cbind(x,z))\nUsing lambda <- rep(lambda[1], ncol(cbind(x,z)))")
+      lambda <- rep(lambda[1], r)
+    }
+    if(any(lambda < 0)) stop("Input lambda must contain non-negative penalty weights.")
+    lambda <- n * lambda
+    lambda.x <- lambda[1:p]
+    lambda.z <- lambda[(p+1):r]
+    
     ### check R
     R <- as.integer(R)
-    if(R < 1) stop("Input 'R' must be a positive integer.")
+    if(R < 0) {
+      stop("Input 'R' must be a non-negative integer.")
+    } else if(R == 0 && nvar > 1L){
+      stop("Input 'R' must be a positive integer for multivariate tests.")
+    }
     
     ### check parallel
     parallel <- as.logical(parallel[1])
@@ -87,7 +104,7 @@ rand.test.lm2 <-
     
     ### estimate coefficients
     m <- cbind(1, x, z)
-    coefs <- solve(crossprod(m)) %*% crossprod(m, y)
+    coefs <- psdinv(crossprod(m) + diag(c(0, lambda), nrow = r + 1, ncol = r + 1)) %*% crossprod(m, y)
     xnames <- colnames(x)
     if(is.null(xnames)) xnames <- paste0("x", 1:p)
     znames <- colnames(z)
@@ -115,39 +132,49 @@ rand.test.lm2 <-
     
     ### process data (if needed)
     if(method == "OS"){
-      x <- x - z %*% solve(crossprod(z)) %*% crossprod(z, x)
+      x <- x - z %*% psdinv(crossprod(z) + diag(lambda.z, nrow = q, ncol = q)) %*% crossprod(z, x)
     } else if(method == "FL"){
-      fit <- z %*% solve(crossprod(z)) %*% crossprod(z, y)
+      fit <- z %*% psdinv(crossprod(z) + diag(lambda.z, nrow = q, ncol = q)) %*% crossprod(z, y)
       res <- y - fit
     } else if(method == "TB"){
       m <- cbind(x, z)
-      mtm <- crossprod(m)
-      mtmi <- solve(mtm)
+      mtm <- crossprod(m) + diag(lambda, nrow = r, ncol = r)
+      mtmi <- psdinv(mtm)
       minv <- tcrossprod(mtmi, m)
       coefs0 <- minv %*% y
       fit <- m %*% coefs0
       res <- y - fit
     } else if(method == "SW"){
-      y <- y - z %*% solve(crossprod(z)) %*% crossprod(z, y)
+      y <- y - z %*% psdinv(crossprod(z) + diag(lambda.z, nrow = q, ncol = q)) %*% crossprod(z, y)
     } else if(method == "KC"){
-      zinv <- tcrossprod(solve(crossprod(z)), z)
+      zinv <- tcrossprod(psdinv(crossprod(z) + diag(lambda.z, nrow = q, ncol = q)), z)
       x <- x - z %*% (zinv %*% x)
       y <- y - z %*% (zinv %*% y)
     } else if(method == "HJ"){
-      zsvd <- svd(z, nu = n, nv = 0)
-      x <- crossprod(zsvd$u[,(q+1):n], x)
-      y <- crossprod(zsvd$u[,(q+1):n], y)
+      if(max(lambda.z) == 0){
+        zsvd <- svd(z, nu = n, nv = 0)
+      } else {
+        ztzeig <- eigen(crossprod(z) + diag(lambda.z, nrow = q, ncol = q))
+        ztzisqrt <- ztzeig$vectors %*% diag(1/sqrt(ztzeig$values), nrow = q, ncol = q)
+        zsvd <- svd(z %*% ztzisqrt, nu = n, nv = 0)
+      }
+      x <- crossprod(zsvd$u[, (q+1):n, drop = FALSE], x)
+      y <- crossprod(zsvd$u[, (q+1):n, drop = FALSE], y)
       n <- n - q
     }
     
     ### set z to NULL (if no longer needed)
-    if(!use.z) z <- NULL
+    if(!use.z) {
+      z <- NULL
+      lambda <- lambda[1:p]
+      r <- p
+    }
     
     ### make m and crossprod matrices
     if(method != "TB"){
       m <- cbind(x, z)
-      mtm <- crossprod(m)
-      mtmi <- solve(mtm)
+      mtm <- crossprod(m) + diag(lambda, nrow = r, ncol = r)
+      mtmi <- psdinv(mtm)
       minv <- tcrossprod(mtmi, m)
     }
     
@@ -178,7 +205,20 @@ rand.test.lm2 <-
       }
       
       ## permutation distribution
-      if(exact){
+      if(R == 0){
+        # parametric test
+        if(homosced){
+          errdf <- ifelse(method == "HJ", n - p - 1, n - p - q - 1)
+          if(method %in% c("KC", "SW")){
+            Tstat <- Tstat * errdf / (n - p - 1)
+          } 
+          p.value <- 1 - pf(Tstat, df1 = p, df2 = errdf)
+        } else {
+          p.value <- 1 - pchisq(Tstat, df = p)
+        }
+        method <- "parametric"
+        perm.dist <- FALSE
+      } else if(exact){
         
         # parallel or sequential computation?
         if(parallel){
@@ -186,16 +226,16 @@ rand.test.lm2 <-
                                 FUN = Tperm.lm2, 
                                 m = m, y = y, p = p,
                                 method = method, 
-                                homosced = homosced,
-                                exact = exact, use.z = use.z,
+                                homosced = homosced, exact = exact, 
+                                lambda = lambda, use.z = use.z,
                                 mtm = mtm, mtmi = mtmi, minv = minv)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.lm2, 
                             m = m, y = y, p = p,
                             method = method, 
-                            homosced = homosced,
-                            exact = exact, use.z = use.z,
+                            homosced = homosced, exact = exact, 
+                            lambda = lambda, use.z = use.z,
                             mtm = mtm, mtmi = mtmi, minv = minv)
         } # end if(parallel)
         
@@ -212,23 +252,23 @@ rand.test.lm2 <-
                                          FUN = Tperm.lm2, 
                                          m = m, y = y, p = p,
                                          method = method, 
-                                         homosced = homosced,
-                                         exact = exact, use.z = use.z,
+                                         homosced = homosced, exact = exact, 
+                                         lambda = lambda, use.z = use.z,
                                          mtm = mtm, mtmi = mtmi, minv = minv)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.lm2, 
                                       m = m, y = y, p = p,
                                       method = method, 
-                                      homosced = homosced,
-                                      exact = exact, use.z = use.z,
+                                      homosced = homosced, exact = exact, 
+                                      lambda = lambda, use.z = use.z,
                                       mtm = mtm, mtmi = mtmi, minv = minv)
         } # end if(parallel)
         
       } # end if(exact)
       
       ## permutation p-value
-      p.value <- mean(permdist >= Tstat)
+      if(R > 0) p.value <- mean(permdist >= Tstat)
       
     } else {
       
@@ -264,16 +304,16 @@ rand.test.lm2 <-
           permdist <- parCapply(cl = cl, x = ix, 
                                 FUN = Tperm.lm2.mv, 
                                 m = m, y = y, method = method, 
-                                homosced = homosced, exact = exact, 
-                                mtm = mtm, mtmi = mtmi, minv = minv,
-                                use.z = use.z, p = p)
+                                homosced = homosced, exact = exact,
+                                lambda = lambda, mtm = mtm, mtmi = mtmi, 
+                                minv = minv, use.z = use.z, p = p)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.lm2.mv, 
                             m = m, y = y, method = method, 
                             homosced = homosced, exact = exact, 
-                            mtm = mtm, mtmi = mtmi, minv = minv,
-                            use.z = use.z, p = p)
+                            lambda = lambda, mtm = mtm, mtmi = mtmi, 
+                            minv = minv, use.z = use.z, p = p)
         } # end if(parallel)
         
       } else {
@@ -289,15 +329,15 @@ rand.test.lm2 <-
                                          FUN = Tperm.lm2.mv, 
                                          m = m, y = y, method = method, 
                                          homosced = homosced, exact = exact, 
-                                         mtm = mtm, mtmi = mtmi, minv = minv,
-                                         use.z = use.z, p = p)
+                                         lambda = lambda, mtm = mtm, mtmi = mtmi, 
+                                         minv = minv, use.z = use.z, p = p)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.lm2.mv, 
                                       m = m, y = y, method = method, 
                                       homosced = homosced, exact = exact, 
-                                      mtm = mtm, mtmi = mtmi, minv = minv,
-                                      use.z = use.z, p = p)
+                                      lambda = lambda, mtm = mtm, mtmi = mtmi, 
+                                      minv = minv, use.z = use.z, p = p)
         } # end if(parallel)
         
       } # end if(exact)
@@ -332,12 +372,13 @@ rand.test.lm2 <-
 Tperm.lm2 <-
   function(i, m, y, p = 1, method = "HJ", 
            homosced = FALSE, exact = FALSE, 
-           use.z = NULL, mtm = NULL, mtmi = NULL, minv = NULL){
+           lambda = 0, use.z = NULL, mtm = NULL, 
+           mtmi = NULL, minv = NULL){
     if(!exact) i <- sample.int(nrow(m))
     if(any(method == c("DS", "OS"))){
-      m[,1:p] <- m[i,1:p]
-      mtm <- crossprod(m)
-      mtmi <- solve(mtm)
+      m[,1:p] <- m[i, 1:p, drop = FALSE]
+      mtm <- crossprod(m) + diag(lambda, nrow = ncol(m))
+      mtmi <- psdinv(mtm)
       minv <- tcrossprod(mtmi, m)
     } else if(any(method == c("FL", "TB"))) {
       y <- y[,1] + y[i,2]
@@ -359,13 +400,13 @@ Tperm.lm2 <-
 Tperm.lm2.mv <-
   function(i, m, y, 
            method = "HJ", homosced = FALSE, exact = FALSE, 
-           mtm = NULL, mtmi = NULL, minv = NULL, 
+           lambda = 0, mtm = NULL, mtmi = NULL, minv = NULL, 
            use.z = NULL, p = 1){
     if(!exact) i <- sample.int(nrow(m))
     if(any(method == c("DS", "OS"))){
-      m[,1:p] <- m[i,1:p]
-      mtm <- crossprod(m)
-      mtmi <- solve(mtm)
+      m[,1:p] <- m[i, 1:p, drop = FALSE]
+      mtm <- crossprod(m) + diag(lambda, nrow = ncol(m))
+      mtmi <- psdinv(mtm)
       minv <- tcrossprod(mtmi, m)
     } else if(any(method == c("FL", "TB"))) {
       y <- as.matrix(y[,,1] + y[i,,2])
@@ -394,7 +435,7 @@ Tstat.lm2 <- function(m, y, p = 1, homosced = FALSE,
   
   # coefficients
   if(is.null(mtm)) mtm <- crossprod(m)
-  if(is.null(mtmi)) mtmi <- solve(mtm)
+  if(is.null(mtmi)) mtmi <- psdinv(mtm)
   if(is.null(minv)) minv <- tcrossprod(mtmi, m)
   theta <- minv %*% y
   
@@ -404,13 +445,13 @@ Tstat.lm2 <- function(m, y, p = 1, homosced = FALSE,
   
   # test statistic
   if(homosced){
-    top <- t(theta[1:p]) %*% solve(mtmi[1:p,1:p]) %*% theta[1:p]
+    top <- t(theta[1:p]) %*% psdinv(mtmi[1:p, 1:p, drop = FALSE]) %*% theta[1:p]
     sigsq <- sum(res^2) / (n - r - 1)
     Tstat <- top / (p * sigsq)
   } else {
     omega <- crossprod(abs(res) * m)
     siosi <- mtmi %*% omega %*% mtmi
-    Tstat <- t(theta[1:p]) %*% solve(siosi[1:p,1:p]) %*% theta[1:p]
+    Tstat <- t(theta[1:p]) %*% psdinv(siosi[1:p, 1:p, drop = FALSE]) %*% theta[1:p]
   } # end if(independent)
   
   as.numeric(Tstat)
@@ -431,7 +472,7 @@ Tstat.lm2.mv <-
     
     # coefficients
     if(is.null(mtm)) mtm <- crossprod(m)
-    if(is.null(mtmi)) mtmi <- solve(mtm)
+    if(is.null(mtmi)) mtmi <- psdinv(mtm)
     if(is.null(minv)) minv <- tcrossprod(mtmi, m)
     theta <- minv %*% y
     
@@ -442,7 +483,7 @@ Tstat.lm2.mv <-
     # test statistic
     Tstat <- rep(NA, nvar)
     if(homosced){
-      mtmi.xi <- solve(mtmi[1:p,1:p])
+      mtmi.xi <- psdinv(mtmi[1:p, 1:p, drop = FALSE])
       sig <- colSums(res^2) / (n - r - 1)
       for(v in 1:nvar){
         Tstat[v] <- (t(theta[1:p,v]) %*% mtmi.xi %*% theta[1:p,v]) / (p * sig[v])
@@ -451,7 +492,7 @@ Tstat.lm2.mv <-
       for(v in 1:nvar){
         omega <- crossprod(abs(res[,v]) * m)
         siosi <- mtmi %*% omega %*% mtmi
-        Tstat[v] <- t(theta[1:p,v]) %*% solve(siosi[1:p,1:p]) %*% theta[1:p,v]
+        Tstat[v] <- t(theta[1:p,v]) %*% psdinv(siosi[1:p, 1:p, drop = FALSE]) %*% theta[1:p,v]
       }
     } # end if(independent)
     

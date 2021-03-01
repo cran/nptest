@@ -13,5 +13,5 @@ S3method(plot, np.cor.test)
 S3method(plot, np.reg.test)
 
 importFrom("graphics", "abline", "hist")
-importFrom("stats", "cor", "cov", "median", "pnorm", "sd", "qnorm", "quantile")
+importFrom("stats", "cor", "cov", "median", "pnorm", "pchisq", "pf", "sd", "qnorm", "quantile")
 importFrom("utils", "combn")

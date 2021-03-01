@@ -14,7 +14,7 @@ this function implements permutation tests of \eqn{H_0: \beta = \beta_0} where \
 
 \usage{
 np.reg.test(x, y, z = NULL, method = NULL,
-            beta = NULL, homosced = FALSE,
+            beta = NULL, homosced = FALSE, lambda = 0, 
             R = 9999, parallel = FALSE, cl = NULL,
             perm.dist = TRUE)
 }
@@ -37,6 +37,9 @@ Null hypothesis value for \eqn{\beta} (\code{p} by \code{m}). Defaults to matrix
 }
   \item{homosced}{
 Are the \eqn{\epsilon} terms homoscedastic? If \code{FALSE} (default), a robust Wald test statistic is used. Otherwise the classic \eqn{F} test statistic is used.
+}
+  \item{lambda}{
+Scalar or vector of ridge parameter(s). Defaults to vector of zeros.
 }
   \item{R}{
 Number of resamples for the permutation test (positive integer). 

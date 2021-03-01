@@ -1,12 +1,12 @@
 rand.test.lm1 <-
   function(x, y, 
            method = c("perm", "flip", "both"),
-           beta = NULL, homosced = FALSE,
+           beta = NULL, homosced = FALSE, lambda = 0,
            R = 9999, parallel = FALSE, cl = NULL,
            perm.dist = TRUE){
     # Randomization Test for Regression (w/o covariates)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: September 9, 2020
+    # last updated: February 18, 2021
     
     
     #########   INITIAL CHECKS   #########
@@ -35,9 +35,24 @@ rand.test.lm1 <-
     ### check homosced
     homosced <- as.logical(homosced[1])
     
+    ### check lambda
+    nlambda <- length(lambda)
+    if(nlambda == 1L){
+      lambda <- rep(lambda, p)
+    } else if(nlambda != p){
+      warning("length(lambda) != ncol(x)\nUsing lambda <- rep(lambda[1], ncol(x))")
+      lambda <- rep(lambda[1], p)
+    }
+    if(any(lambda < 0)) stop("Input lambda must contain non-negative penalty weights.")
+    use.lambda <- ifelse(max(lambda) > 0, TRUE, FALSE)
+    
     ### check R
     R <- as.integer(R)
-    if(R < 1) stop("Input 'R' must be a positive integer.")
+    if(R < 0) {
+      stop("Input 'R' must be a non-negative integer.")
+    } else if(R == 0 && nvar > 1L){
+      stop("Input 'R' must be a positive integer for multivariate tests.")
+    }
     
     ### check parallel
     parallel <- as.logical(parallel[1])
@@ -92,8 +107,8 @@ rand.test.lm1 <-
     y <- scale(y, center = ybar, scale = FALSE)
     
     ### calculate crossproducts and inverses
-    xtx <- crossprod(x)
-    xtxi <- solve(xtx)
+    xtx <- crossprod(x) + diag(n * lambda, nrow = p, ncol = p)
+    xtxi <- psdinv(xtx)
     xinv <- tcrossprod(xtxi, x)
     coefs <- xinv %*% y
     ssy <- NULL
@@ -110,10 +125,17 @@ rand.test.lm1 <-
       ## observed test statistic
       Tstat <- Tstat.lm1(x = x, y = y, homosced = homosced,
                          xtx = xtx, xtxi = xtxi, xinv = xinv, 
-                         ssy = ssy, beta = coefs)
+                         ssy = ssy, beta = coefs, lambda = use.lambda)
       
       ## permutation distribution
-      if(exact){
+      if(R == 0){
+        # parametric test
+        method <- "parametric"
+        perm.dist <- FALSE
+        p.value <- 1 - ifelse(homosced, 
+                              pf(Tstat, df1 = p, df2 = n - p - 1),
+                              pchisq(Tstat, df = p))
+      } else if(exact){
         
         # parallel or sequential computation?
         if(parallel){
@@ -124,7 +146,7 @@ rand.test.lm1 <-
                                 homosced = homosced,
                                 exact = exact, xtx = xtx, 
                                 xtxi = xtxi, xinv = xinv, 
-                                ssy = ssy)
+                                ssy = ssy, lambda = use.lambda)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.lm1, 
@@ -133,7 +155,7 @@ rand.test.lm1 <-
                             homosced = homosced,
                             exact = exact, xtx = xtx, 
                             xtxi = xtxi, xinv = xinv, 
-                            ssy = ssy)
+                            ssy = ssy, lambda = use.lambda)
         } # end if(parallel)
         
       } else {
@@ -152,7 +174,7 @@ rand.test.lm1 <-
                                          homosced = homosced,
                                          exact = exact, xtx = xtx, 
                                          xtxi = xtxi, xinv = xinv, 
-                                         ssy = ssy)
+                                         ssy = ssy, lambda = use.lambda)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.lm1,
@@ -161,13 +183,13 @@ rand.test.lm1 <-
                                       homosced = homosced,
                                       exact = exact, xtx = xtx, 
                                       xtxi = xtxi, xinv = xinv, 
-                                      ssy = ssy)
+                                      ssy = ssy, lambda = use.lambda)
         } # end if(parallel)
         
       } # end if(exact)
       
       ## permutation p-value
-      p.value <- mean(permdist >= Tstat)
+      if(R > 0) p.value <- mean(permdist >= Tstat)
       
       ## correct coefficients
       if(!is.null(beta)) {
@@ -191,7 +213,8 @@ rand.test.lm1 <-
       ## observed test statistic
       Tuni <- Tstat.lm1.mv(x = x, y = y, homosced = homosced,
                            xtx = xtx, xtxi = xtxi, xinv = xinv, 
-                           ssy = ssy, beta = coefs, combine = FALSE)
+                           ssy = ssy, beta = coefs, combine = FALSE, 
+                           lambda = use.lambda)
       Tstat <- max(Tuni)
       
       ## permutation distribution
@@ -205,7 +228,8 @@ rand.test.lm1 <-
                                 method = method, 
                                 homosced = homosced,
                                 exact = exact, xtx = xtx, 
-                                xtxi = xtxi, xinv = xinv, ssy = ssy)
+                                xtxi = xtxi, xinv = xinv, ssy = ssy, 
+                                lambda = use.lambda)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.lm1.mv, 
@@ -213,7 +237,8 @@ rand.test.lm1 <-
                             method = method, 
                             homosced = homosced,
                             exact = exact, xtx = xtx, 
-                            xtxi = xtxi, xinv = xinv, ssy = ssy)
+                            xtxi = xtxi, xinv = xinv, ssy = ssy,
+                            lambda = use.lambda)
         } # end if(parallel)
         
       } else {
@@ -231,7 +256,8 @@ rand.test.lm1 <-
                                          method = method, 
                                          homosced = homosced,
                                          exact = exact, xtx = xtx, 
-                                         xtxi = xtxi, xinv = xinv, ssy = ssy)
+                                         xtxi = xtxi, xinv = xinv, ssy = ssy,
+                                         lambda = use.lambda)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.lm1.mv,
@@ -239,7 +265,8 @@ rand.test.lm1 <-
                                       method = method, 
                                       homosced = homosced,
                                       exact = exact, xtx = xtx, 
-                                      xtxi = xtxi, xinv = xinv, ssy = ssy)
+                                      xtxi = xtxi, xinv = xinv, ssy = ssy,
+                                      lambda = use.lambda)
         } # end if(parallel)
         
       } # end if(exact)
@@ -292,7 +319,8 @@ Tperm.lm1 <-
   function(i, xmat, yvec, method = "perm", 
            homosced = FALSE, exact = FALSE,
            xtx = NULL, xtxi = NULL, 
-           xinv = NULL, ssy = NULL){
+           xinv = NULL, ssy = NULL,
+           lambda = FALSE){
     n <- nrow(xmat)
     if(method == "perm"){
       if(!exact) i <- sample.int(n)
@@ -306,7 +334,8 @@ Tperm.lm1 <-
       yvec <- yvec[i[1:n]]            # permute
     }
     Tstat <- Tstat.lm1(x = xmat, y = yvec, homosced = homosced,
-                       xtx = xtx, xtxi = xtxi, xinv = xinv, ssy = ssy)
+                       xtx = xtx, xtxi = xtxi, xinv = xinv, 
+                       ssy = ssy, lambda = lambda)
     return(Tstat)
   } # end Tperm.lm1.R
 
@@ -315,7 +344,8 @@ Tperm.lm1.mv <-
   function(i, xmat, ymat, method = "perm", 
            homosced = FALSE, exact = FALSE,
            xtx = NULL, xtxi = NULL, 
-           xinv = NULL, ssy = NULL){
+           xinv = NULL, ssy = NULL,
+           lambda = FALSE){
     n <- nrow(xmat)
     if(method == "perm"){
       if(!exact) i <- sample.int(n)
@@ -329,7 +359,8 @@ Tperm.lm1.mv <-
       ymat <- ymat[i[1:n],]            # permute
     }
     Tstat <- Tstat.lm1.mv(x = xmat, y = ymat, homosced = homosced,
-                          xtx = xtx, xtxi = xtxi, xinv = xinv, ssy = ssy)
+                          xtx = xtx, xtxi = xtxi, xinv = xinv, 
+                          ssy = ssy, lambda = lambda)
     return(Tstat)
   } # end Tperm.lm1.mv.R
 
@@ -339,7 +370,7 @@ Tstat.lm1 <-
   function(x, y, homosced = FALSE,
            xtx = NULL, xtxi = NULL, 
            xinv = NULL, ssy = NULL,
-           beta = NULL){
+           beta = NULL, lambda = FALSE){
     # assumes x and y are centered
     
     # check inputs
@@ -348,19 +379,23 @@ Tstat.lm1 <-
     
     # coefficients
     if(is.null(xtx)) xtx <- crossprod(x)
-    if(is.null(xtxi)) xtxi <- solve(xtx)
+    if(is.null(xtxi)) xtxi <- psdinv(xtx)
     if(is.null(xinv)) xinv <- tcrossprod(xtxi, x)
     if(is.null(beta)) beta <- xinv %*% y
     
     # test statistic
     if(homosced){
       if(is.null(ssy)) ssy <- sum(y^2)
-      rss <- ssy - sum(crossprod(x, y) * beta)
+      if(lambda){
+        rss <- ssy - 2 * sum(crossprod(x, y) * beta) + sum((x %*% beta)^2)
+      } else {
+        rss <- ssy - sum(crossprod(x, y) * beta)
+      }
       sig <- rss / (n - p - 1)
       Tstat <- crossprod(beta, xtx %*% beta) / (p * sig)
     } else {
       omega <- crossprod(abs(y) * x)
-      Tstat <- crossprod(beta, solve(xtxi %*% omega %*% xtxi) %*% beta)
+      Tstat <- crossprod(beta, psdinv(xtxi %*% omega %*% xtxi) %*% beta)
     }
     
     as.numeric(Tstat)
@@ -371,7 +406,7 @@ Tstat.lm1 <-
 Tstat.lm1.mv <- 
   function(x, y, homosced = FALSE, xtx = NULL, 
            xtxi = NULL, xinv = NULL, ssy = NULL,
-           beta = NULL, combine = TRUE){
+           beta = NULL, combine = TRUE, lambda = FALSE){
     # assumes x and y are centered
     
     # check inputs
@@ -381,7 +416,7 @@ Tstat.lm1.mv <-
     
     # coefficients
     if(is.null(xtx)) xtx <- crossprod(x)
-    if(is.null(xtxi)) xtxi <- solve(xtx)
+    if(is.null(xtxi)) xtxi <- psdinv(xtx)
     if(is.null(xinv)) xinv <- tcrossprod(xtxi, x)
     if(is.null(beta)) beta <- xinv %*% y
     
@@ -389,13 +424,17 @@ Tstat.lm1.mv <-
     Tstat <- rep(NA, nvar)
     if(homosced){
       if(is.null(ssy)) ssy <- colSums(y^2)
-      rss <- ssy - colSums(crossprod(x, y) * beta)
+      if(lambda){
+        rss <- ssy - 2 * colSums(crossprod(x, y) * beta) + colSums((x %*% beta)^2)
+      } else {
+        rss <- ssy - colSums(crossprod(x, y) * beta)
+      }
       sig <- rss / (n - p - 1)
       for(v in 1:nvar) Tstat[v] <- (t(beta[,v]) %*% (xtx %*% beta[,v])) / (p * sig[v])
     } else {
       for(v in 1:nvar){
         omega <- crossprod(abs(y[,v]) * x)
-        Tstat[v] <- t(beta[,v]) %*% (solve(xtxi %*% omega %*% xtxi) %*% beta[,v])
+        Tstat[v] <- t(beta[,v]) %*% (psdinv(xtxi %*% omega %*% xtxi) %*% beta[,v])
       }
     }
     
