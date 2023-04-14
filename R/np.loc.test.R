@@ -4,20 +4,22 @@ np.loc.test <-
            mu = 0, paired = FALSE, var.equal = FALSE, 
            median.test = FALSE, symmetric = TRUE,
            R = 9999, parallel = FALSE, cl = NULL,
-           perm.dist = TRUE){
+           perm.dist = TRUE, na.rm = TRUE){
     # Nonparameteric Tests of Location Parameters
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 4, 2018
+    # last updated: 2023-04-13
     
     
     ### check x
     x <- as.matrix(x)
     nvar <- ncol(x)
+    if(na.rm) x <- na.omit(x)
     
     ### check y
     if(!is.null(y)){
       y <- as.matrix(y)
       if(ncol(y) != nvar) stop("Inputs 'x' and 'y' must have the same number of columns.")
+      if(na.rm) y <- na.omit(y)
     }
     
     ### check type

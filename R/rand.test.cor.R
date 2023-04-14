@@ -6,7 +6,7 @@ rand.test.cor <-
            perm.dist = TRUE){
     # Randomization Tests of Correlation Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: September 9, 2020
+    # last updated: 2023-04-14
     
     
     #########   INITIAL CHECKS   #########
@@ -41,7 +41,7 @@ rand.test.cor <-
     if(parallel){
       if(is.null(cl)){
         make.cl <- TRUE
-        cl <- makeCluster(detectCores())
+        cl <- parallel::makeCluster(2L)
       } else {
         if(!any(class(cl) == "cluster")) stop("Input 'cl' must be an object of class 'cluster'.")
       }
@@ -73,22 +73,17 @@ rand.test.cor <-
       
       ## parallel or sequential computation?
       if(parallel){
-        permdist <- parCapply(cl = cl, x = ix, 
-                              FUN = Tperm.cor, 
-                              xvec = x, yvec = y, 
-                              independent = independent, 
-                              exact = exact)
+        permdist <- parallel::parCapply(cl = cl, x = ix, 
+                                        FUN = Tperm.cor, 
+                                        xvec = x, yvec = y, 
+                                        independent = independent, 
+                                        exact = exact)
       } else {
         permdist <- apply(X = ix, MARGIN = 2, 
                           FUN = Tperm.cor,
                           xvec = x, yvec = y, 
                           independent = independent, 
                           exact = exact)
-        # permdist <- rep(0, nperm)
-        # for(j in 1:nperm) {
-        #   permdist[j] <- Tstat.cor(x = x, y = y[ix[,j]], 
-        #                            independent = independent, rho = rho)
-        # }
       } # end if(parallel)
       
     } else {
@@ -100,21 +95,17 @@ rand.test.cor <-
       
       ## parallel or sequential computation?
       if(parallel){
-        permdist[2:nperm] <- parSapply(cl = cl, X = integer(R), 
-                                       FUN = Tperm.cor, 
-                                       xvec = x, yvec = y, 
-                                       independent = independent, 
-                                       exact = exact)
+        permdist[2:nperm] <- parallel::parSapply(cl = cl, X = integer(R), 
+                                                 FUN = Tperm.cor, 
+                                                 xvec = x, yvec = y, 
+                                                 independent = independent, 
+                                                 exact = exact)
       } else {
         permdist[2:nperm] <- sapply(X = integer(R),
                                     FUN = Tperm.cor,
                                     xvec = x, yvec = y,
                                     independent = independent,
                                     exact = exact)
-         # for(j in 2:nperm) {
-         #   permdist[j] <- Tstat.cor(x = x, y = sample(y),
-         #                            independent = independent, rho = rho)
-         # }
       } # end if(parallel)
       
     } # end if(exact)
@@ -129,7 +120,7 @@ rand.test.cor <-
     }
     
     ### return results
-    if(make.cl) stopCluster(cl)
+    if(make.cl) parallel::stopCluster(cl)
     if(!perm.dist) permdist <- NULL
     res <- list(statistic = Tstat, p.value = p.value,
                 perm.dist = permdist, alternative = alternative, 

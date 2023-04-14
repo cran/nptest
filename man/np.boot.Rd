@@ -46,7 +46,7 @@ function that takes in \code{x} (and possibly additional arguments passed using 
 Logical indicating if the \code{\link{parallel}} package should be used for parallel computing (of the bootstrap distribution). Defaults to \code{FALSE}, which implements sequential computing.
 }
   \item{cl}{
-Cluster for parallel computing, which is used when \code{parallel = TRUE}. Note that if \code{parallel = TRUE} and \code{cl = NULL}, then the cluster is defined as \code{makeCluster(detectCores())}. 
+Cluster for parallel computing, which is used when \code{parallel = TRUE}. Note that if \code{parallel = TRUE} and \code{cl = NULL}, then the cluster is defined as \code{makeCluster(2L)} to use two cores. To make use of all available cores, use the code \code{cl = makeCluster(detectCores())}.
 }
   \item{boot.dist}{
 Logical indicating if the bootstrap distribution should be returned (see Note).  

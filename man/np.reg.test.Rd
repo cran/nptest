@@ -16,7 +16,7 @@ this function implements permutation tests of \eqn{H_0: \beta = \beta_0} where \
 np.reg.test(x, y, z = NULL, method = NULL,
             beta = NULL, homosced = FALSE, lambda = 0, 
             R = 9999, parallel = FALSE, cl = NULL,
-            perm.dist = TRUE)
+            perm.dist = TRUE, na.rm = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -48,10 +48,13 @@ Number of resamples for the permutation test (positive integer).
 Logical indicating if the \code{\link{parallel}} package should be used for parallel computing (of the permutation distribution). Defaults to \code{FALSE}, which implements sequential computing.
 }
   \item{cl}{
-Cluster for parallel computing, which is used when \code{parallel = TRUE}. Note that if \code{parallel = TRUE} and \code{cl = NULL}, then the cluster is defined as \code{makeCluster(detectCores())}. 
+Cluster for parallel computing, which is used when \code{parallel = TRUE}. Note that if \code{parallel = TRUE} and \code{cl = NULL}, then the cluster is defined as \code{makeCluster(2L)} to use two cores. To make use of all available cores, use the code \code{cl = makeCluster(detectCores())}.
 }
   \item{perm.dist}{
 Logical indicating if the permutation distribution should be returned.  
+}
+  \item{na.rm}{
+If \code{TRUE} (default), the arguments \code{x} and \code{y} (and \code{z} if provided) are passed to the \code{\link{na.omit}} function to remove cases with missing data.
 }
 }
 \details{

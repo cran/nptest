@@ -6,7 +6,7 @@ rand.test.two <-
            perm.dist = TRUE){
     # Two-Sample Randomization Test for Location (Mean/Median)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: September 9, 2020
+    # last updated: 2023-04-14
     
     
     #########   INITIAL CHECKS   #########
@@ -48,7 +48,7 @@ rand.test.two <-
     if(parallel){
       if(is.null(cl)){
         make.cl <- TRUE
-        cl <- makeCluster(detectCores())
+        cl <- parallel::makeCluster(2L)
       } else {
         if(!any(class(cl) == "cluster")) stop("Input 'cl' must be an object of class 'cluster'.")
       }
@@ -87,12 +87,12 @@ rand.test.two <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist <- parCapply(cl = cl, x = ix, 
-                                FUN = Tperm.two, 
-                                z = z, ny = n,
-                                var.equal = var.equal,
-                                median.test = median.test,
-                                exact = exact)
+          permdist <- parallel::parCapply(cl = cl, x = ix, 
+                                          FUN = Tperm.two, 
+                                          z = z, ny = n,
+                                          var.equal = var.equal,
+                                          median.test = median.test,
+                                          exact = exact)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.two, 
@@ -111,12 +111,12 @@ rand.test.two <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist[2:nperm] <- parSapply(cl = cl, X = integer(R), 
-                                         FUN = Tperm.two, 
-                                         z = z, ny = n,
-                                         var.equal = var.equal,
-                                         median.test = median.test,
-                                         exact = exact)
+          permdist[2:nperm] <- parallel::parSapply(cl = cl, X = integer(R), 
+                                                   FUN = Tperm.two, 
+                                                   z = z, ny = n,
+                                                   var.equal = var.equal,
+                                                   median.test = median.test,
+                                                   exact = exact)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.two, 
@@ -168,13 +168,13 @@ rand.test.two <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist <- parCapply(cl = cl, x = ix, 
-                                FUN = Tperm.two.mv, 
-                                z = z, ny = n,
-                                var.equal = var.equal,
-                                median.test = median.test,
-                                alternative = alternative, 
-                                exact = exact)
+          permdist <- parallel::parCapply(cl = cl, x = ix, 
+                                          FUN = Tperm.two.mv, 
+                                          z = z, ny = n,
+                                          var.equal = var.equal,
+                                          median.test = median.test,
+                                          alternative = alternative, 
+                                          exact = exact)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.two.mv, 
@@ -194,13 +194,13 @@ rand.test.two <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist[2:nperm] <- parSapply(cl = cl, X = integer(R), 
-                                         FUN = Tperm.two.mv, 
-                                         z = z, ny = n,
-                                         var.equal = var.equal,
-                                         median.test = median.test,
-                                         alternative = alternative, 
-                                         exact = exact)
+          permdist[2:nperm] <- parallel::parSapply(cl = cl, X = integer(R), 
+                                                   FUN = Tperm.two.mv, 
+                                                   z = z, ny = n,
+                                                   var.equal = var.equal,
+                                                   median.test = median.test,
+                                                   alternative = alternative, 
+                                                   exact = exact)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.two.mv, 
@@ -238,7 +238,7 @@ rand.test.two <-
     } # end if(nvar == 1L)
     
     ### return results
-    if(make.cl) stopCluster(cl)
+    if(make.cl) parallel::stopCluster(cl)
     if(!perm.dist) permdist <- NULL
     res <- list(statistic = Tstat, p.value = p.value,
                 perm.dist = permdist, alternative = alternative, 

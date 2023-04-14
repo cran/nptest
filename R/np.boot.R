@@ -5,7 +5,7 @@ np.boot <-
            parallel = FALSE, cl = NULL, boot.dist = TRUE){
     # Nonparametric Bootstrap (SE, Bias, and CIs)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: September 28, 2020
+    # last updated: 2023-04-14
     
     
     ######***######   CHECKS   ######***######
@@ -87,7 +87,7 @@ np.boot <-
     if(parallel){
       if(is.null(cl)){
         make.cl <- TRUE
-        cl <- makeCluster(detectCores())
+        cl <- parallel::makeCluster(2L)
       } else {
         if(!any(class(cl) == "cluster")) stop("Input 'cl' must be an object of class 'cluster'.")
       }
@@ -104,8 +104,8 @@ np.boot <-
     colnames(bootdist) <- varnames
     bootdist[1,] <- t0
     if(parallel){
-      bootdist[2:nboot,] <- t(parApply(cl = cl, X = bootx,
-                                       MARGIN = 1, FUN = statistic, ...))
+      bootdist[2:nboot,] <- t(parallel::parApply(cl = cl, X = bootx,
+                                                 MARGIN = 1, FUN = statistic, ...))
     } else {
       bootdist[2:nboot,] <- t(apply(X = bootx, MARGIN = 1, FUN = statistic, ...))
     }
@@ -149,7 +149,7 @@ np.boot <-
       percent <- array(NA, dim = dims, dimnames = dnames)
       probs <- c(alphas/2, 1 - alphas/2)
       for(j in 1:nstat){
-        quant <- quantile(bootdist[,j], probs = probs)
+        quant <- quantile(bootdist[,j], probs = probs, na.rm = TRUE)
         percent[,1,j] <- quant[1:nlevel]
         percent[,2,j] <- quant[(nlevel+1):length(probs)]
       }
@@ -162,7 +162,7 @@ np.boot <-
       basic <- array(NA, dim = dims, dimnames = dnames)
       probs <- c(alphas/2, 1 - alphas/2)
       for(j in 1:nstat){
-        quant <- quantile(bootdist[,j], probs = probs)
+        quant <- quantile(bootdist[,j], probs = probs, na.rm = TRUE)
         basic[,1,j] <- 2 * t0[j] - quant[(nlevel+1):length(probs)]
         basic[,2,j] <- 2 * t0[j] - quant[1:nlevel]
       }
@@ -176,15 +176,15 @@ np.boot <-
       bootdistse <- matrix(0, nboot, nstat)
       sdfun.sample.index <- sample.int(nobs, size = nobs * sdrep, replace = TRUE)
       if(parallel){
-        bootdistse[1:nboot,] <- t(parApply(cl = cl, X = rbind(x, bootx),
-                                           MARGIN = 1, FUN = sdfun, ...))
+        bootdistse[1:nboot,] <- t(parallel::parApply(cl = cl, X = rbind(x, bootx),
+                                                     MARGIN = 1, FUN = sdfun, ...))
       } else {
         bootdistse[1:nboot,] <- t(apply(X = rbind(x, bootx), MARGIN = 1, FUN = sdfun, ...))
       }
       for(j in 1:nstat){
         tstat <- (bootdist[,j] - t0[j]) / bootdistse[,j]
-        student[,1,j] <- t0[j] - quantile(tstat, probs = 1 - alphas/2) * bootse[j]
-        student[,2,j] <- t0[j] - quantile(tstat, probs = alphas/2) * bootse[j]
+        student[,1,j] <- t0[j] - quantile(tstat, probs = 1 - alphas/2, na.rm = TRUE) * bootse[j]
+        student[,2,j] <- t0[j] - quantile(tstat, probs = alphas/2, na.rm = TRUE) * bootse[j]
       }
       student <- student[,,,drop=TRUE]
     } # end if(any(method == "stud"))
@@ -205,7 +205,7 @@ np.boot <-
         alphas1 <- pnorm(z0[j] + (z0[j] + z1) / (1 - acc[j]*(z0[j] + z1)))
         alphas2 <- pnorm(z0[j] + (z0[j] + z2) / (1 - acc[j]*(z0[j] + z2)))
         probs <- c(alphas1, alphas2)
-        quant <- quantile(bootdist[,j], probs = probs)
+        quant <- quantile(bootdist[,j], probs = probs, na.rm = TRUE)
         bca[,1,j] <- quant[1:nlevel]
         bca[,2,j] <- quant[(nlevel+1):length(probs)]
       }
@@ -216,7 +216,7 @@ np.boot <-
     ######***######   RESULTS   ######***######
     
     ### clean up
-    if(make.cl) stopCluster(cl)
+    if(make.cl) parallel::stopCluster(cl)
     if(make.sdfun) sdfun <- NULL
     if(make.jack) jackknife <- NULL
     if(!boot.dist) {

@@ -6,7 +6,7 @@ rand.test.lm1 <-
            perm.dist = TRUE){
     # Randomization Test for Regression (w/o covariates)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: February 18, 2021
+    # last updated: 2023-04-14
     
     
     #########   INITIAL CHECKS   #########
@@ -62,7 +62,7 @@ rand.test.lm1 <-
     if(parallel){
       if(is.null(cl)){
         make.cl <- TRUE
-        cl <- makeCluster(detectCores())
+        cl <- parallel::makeCluster(2L)
       } else {
         if(!any(class(cl) == "cluster")) stop("Input 'cl' must be an object of class 'cluster'.")
       }
@@ -139,14 +139,14 @@ rand.test.lm1 <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist <- parCapply(cl = cl, x = ix, 
-                                FUN = Tperm.lm1, 
-                                xmat = x, yvec = y, 
-                                method = method, 
-                                homosced = homosced,
-                                exact = exact, xtx = xtx, 
-                                xtxi = xtxi, xinv = xinv, 
-                                ssy = ssy, lambda = use.lambda)
+          permdist <- parallel::parCapply(cl = cl, x = ix, 
+                                          FUN = Tperm.lm1, 
+                                          xmat = x, yvec = y, 
+                                          method = method, 
+                                          homosced = homosced,
+                                          exact = exact, xtx = xtx, 
+                                          xtxi = xtxi, xinv = xinv, 
+                                          ssy = ssy, lambda = use.lambda)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.lm1, 
@@ -167,14 +167,14 @@ rand.test.lm1 <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist[2:nperm] <- parSapply(cl = cl, X = integer(R), 
-                                         FUN = Tperm.lm1, 
-                                         xmat = x, yvec = y, 
-                                         method = method, 
-                                         homosced = homosced,
-                                         exact = exact, xtx = xtx, 
-                                         xtxi = xtxi, xinv = xinv, 
-                                         ssy = ssy, lambda = use.lambda)
+          permdist[2:nperm] <- parallel::parSapply(cl = cl, X = integer(R), 
+                                                   FUN = Tperm.lm1, 
+                                                   xmat = x, yvec = y, 
+                                                   method = method, 
+                                                   homosced = homosced,
+                                                   exact = exact, xtx = xtx, 
+                                                   xtxi = xtxi, xinv = xinv, 
+                                                   ssy = ssy, lambda = use.lambda)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.lm1,
@@ -222,14 +222,14 @@ rand.test.lm1 <-
         
         # parallel or sequential computation?
         if(parallel){
-          permdist <- parCapply(cl = cl, x = ix, 
-                                FUN = Tperm.lm1.mv, 
-                                xmat = x, ymat = y, 
-                                method = method, 
-                                homosced = homosced,
-                                exact = exact, xtx = xtx, 
-                                xtxi = xtxi, xinv = xinv, ssy = ssy, 
-                                lambda = use.lambda)
+          permdist <- parallel::parCapply(cl = cl, x = ix, 
+                                          FUN = Tperm.lm1.mv, 
+                                          xmat = x, ymat = y, 
+                                          method = method, 
+                                          homosced = homosced,
+                                          exact = exact, xtx = xtx, 
+                                          xtxi = xtxi, xinv = xinv, ssy = ssy, 
+                                          lambda = use.lambda)
         } else {
           permdist <- apply(X = ix, MARGIN = 2, 
                             FUN = Tperm.lm1.mv, 
@@ -250,14 +250,14 @@ rand.test.lm1 <-
         
         ## parallel or sequential computation?
         if(parallel){
-          permdist[2:nperm] <- parSapply(cl = cl, X = integer(R), 
-                                         FUN = Tperm.lm1.mv, 
-                                         xmat = x, ymat = y, 
-                                         method = method, 
-                                         homosced = homosced,
-                                         exact = exact, xtx = xtx, 
-                                         xtxi = xtxi, xinv = xinv, ssy = ssy,
-                                         lambda = use.lambda)
+          permdist[2:nperm] <- parallel::parSapply(cl = cl, X = integer(R), 
+                                                   FUN = Tperm.lm1.mv, 
+                                                   xmat = x, ymat = y, 
+                                                   method = method, 
+                                                   homosced = homosced,
+                                                   exact = exact, xtx = xtx, 
+                                                   xtxi = xtxi, xinv = xinv, ssy = ssy,
+                                                   lambda = use.lambda)
         } else {
           permdist[2:nperm] <- sapply(X = integer(R),
                                       FUN = Tperm.lm1.mv,
@@ -297,7 +297,7 @@ rand.test.lm1 <-
     } # end if(nvar == 1L)
     
     ### return results
-    if(make.cl) stopCluster(cl)
+    if(make.cl) parallel::stopCluster(cl)
     if(!perm.dist) permdist <- NULL
     res <- list(statistic = Tstat, p.value = p.value,
                 perm.dist = permdist, method = method, 

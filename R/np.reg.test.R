@@ -2,14 +2,21 @@ np.reg.test <-
   function(x, y, z = NULL, method = NULL,
            beta = NULL, homosced = FALSE, lambda = 0,
            R = 9999, parallel = FALSE, cl = NULL,
-           perm.dist = TRUE){
+           perm.dist = TRUE, na.rm = TRUE){
     # Nonparametric Tests of Regression Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: February 17, 2021
+    # last updated: 2023-04-13
     
     
     ### check z
     znull <- is.null(z)
+    
+    ### remove missing data
+    if(na.rm){
+      x <- na.omit(x)
+      y <- na.omit(y)
+      if(!znull) z <- na.omit(z)
+    }
     
     ### check method
     if(is.null(method)) method <- ifelse(znull, "perm", "HJ")

@@ -1,3 +1,26 @@
+Changes from ver 1.0-3 to ver 1.1  (2023-04-14)
+
+1) np.boot
+	* Added "na.rm = TRUE" when calling the quantile() function
+	* Note that NA and NaN can arise using "stud" confidence intervals
+
+2) np.cor.test, np.loc.test, np.reg.test
+	* Added "na.rm" argument to handle removal of missing data
+	* Default is TRUE which removes missing cases from input data
+
+3) start-up message is now provided
+	* prints ascii package name art (if interactive) and version number
+	* also provides information about how to cite the package
+
+4) parallel package is no longer required
+	* parallel was previously required and automatically attached
+	* now parallel package will only be loaded if requested
+
+5) version numbering format change
+	* previous versions was 3 digits (1.0-0)
+	* new versioning is 2 digits (1.1)
+
+
 
 Changes from ver 1.0-2 to ver 1.0-3  (2021-03-01)
 
@@ -11,7 +34,6 @@ Changes from ver 1.0-2 to ver 1.0-3  (2021-03-01)
 
 
 
-
 Changes from ver 1.0-1 to ver 1.0-2  (2020-10-01)
 
 1) np.boot (new function for nonparametric bootstrapping)
@@ -21,7 +43,6 @@ Changes from ver 1.0-1 to ver 1.0-2  (2020-10-01)
 2) Update to package name (to reflect bootstrap extensions)
 	* Previous name: Nonparametric Tests via Permutations
 	* Updated name: Nonparametric Bootstrap and Permutation Tests
-
 
 
 

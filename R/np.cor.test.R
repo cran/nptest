@@ -3,10 +3,10 @@ np.cor.test <-
            alternative = c("two.sided", "less", "greater"),
            rho = 0, independent = FALSE, partial = TRUE,
            R = 9999, parallel = FALSE, cl = NULL,
-           perm.dist = TRUE){
+           perm.dist = TRUE, na.rm = TRUE){
     # Nonparametric Tests of Correlation Coefficients
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: July 8, 2020
+    # last updated: 2023-04-13
     
     
     ### check x and y
@@ -14,6 +14,13 @@ np.cor.test <-
     y <- as.numeric(y)
     n <- length(x)
     if(length(y) != n) stop("Inputs 'x' and 'y' must have same length.")
+    
+    ### check for missing data
+    if(na.rm){
+      x <- na.omit(x)
+      y <- na.omit(y)
+      if(!is.null(z)) z <- na.omit(z)
+    }
     
     ### check z
     if(!is.null(z)){
